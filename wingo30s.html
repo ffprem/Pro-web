@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARICO X PREDICTOR</title>
+    <link href="https://fonts.googleapis.com/css2?family=El+Messiri&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'El Messiri', sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background: url('https://i.ibb.co/pjkTW4Zn/Solo-leveling-1.jpg') no-repeat center center/cover;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+            width: 320px;
+            color: white;
+        }
+        .result-box {
+            margin: 20px 0;
+            font-size: 20px;
+        }
+        .result-text {
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>JARICO X PREDICTOR</h1>
+        <div class="result-box">
+            <p>Period: <span id="period">000000</span></p>
+            <p>Timer: <span id="timer">00:30</span></p>
+            <p>Result: <span id="result" class="result-text">Pending...</span></p>
+        </div>
+    </div>
+
+    <script>
+        let lastPeriod = "";
+        let history = []; // Store past results for AI-based prediction
+        let lastPrediction = "BIGGG"; // Default start
+
+        function updatePeriodAndTimer() {
+            let now = new Date();
+            let startHour = 5, startMinute = 30;
+            let startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startHour, startMinute, 0);
+            let elapsedSeconds = Math.floor((now - startTime) / 1000);
+            
+            if (elapsedSeconds < 0) elapsedSeconds = 0;
+
+            let totalPeriods = Math.floor(elapsedSeconds / 30);
+            let upcomingPeriod = totalPeriods + 1;
+            let formattedDate = new Intl.DateTimeFormat('en-GB', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now).replace(/\//g, '');
+            let periodNumber = `100005${String(upcomingPeriod).padStart(4, '0')}`;
+            
+            if (periodNumber !== lastPeriod) {
+                lastPeriod = periodNumber;
+                generateResult();
+            }
+
+            document.getElementById("period").innerText = formattedDate + periodNumber;
+            let remainingSeconds = 30 - (elapsedSeconds % 30);
+            document.getElementById("timer").innerText = `00:${String(remainingSeconds).padStart(2, '0')}`;
+
+            setTimeout(updatePeriodAndTimer, 1000);
+        }
+
+        function generateResult() {
+            let prediction = balancedPrediction();
+            document.getElementById("result").innerText = prediction;
+        }
+
+        function balancedPrediction() {
+            let smallCount = history.filter(r => r === "SMALLL").length;
+            let bigCount = history.filter(r => r === "BIGGG").length;
+
+            let nextPrediction;
+
+            // **50/50 BALANCE LOGIC**
+            if (bigCount > smallCount) {
+                nextPrediction = "SMALLL"; // Balance towards SMALL
+            } else if (smallCount > bigCount) {
+                nextPrediction = "BIGGG"; // Balance towards BIG
+            } else {
+                nextPrediction = lastPrediction === "BIGGG" ? "SMALLL" : "BIGGG"; // Maintain Alternation
+            }
+
+            // **Prevent Over-Streaks (Limit Same Prediction to Max 3)**
+            if (history.length >= 3) {
+                let lastThree = history.slice(-3);
+                if (lastThree.every(r => r === "BIGGG")) {
+                    nextPrediction = "SMALLL";
+                }
+                if (lastThree.every(r => r === "SMALLL")) {
+                    nextPrediction = "BIGGG";
+                }
+            }
+
+            // **Lock-in Stability**
+            lastPrediction = nextPrediction;
+            history.push(nextPrediction);
+
+            // **Maintain History Size**
+            if (history.length > 20) {
+                history.shift();
+            }
+
+            return nextPrediction;
+        }
+
+        updatePeriodAndTimer();
+    </script>
+
+</body>
+</html>
